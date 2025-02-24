@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id      Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  asisstant_id String?
+  password     String
+  role         Role
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  FaceRecognitionData FaceRecognitionData?
+  Attendance          Attendance[]
+  QR_Attendance       QRAttendance[]
+  Lab_Sessions        LabSessions[]
+  Duty_Schedule       DutySchedule[]
+  Notifications       Notifications[]
+}
+
+model FaceRecognitionData {
+  face_id        Int      @id @default(autoincrement())
+  user           User     @relation(fields: [user_id], references: [user_id])
+  user_id        Int      @unique
+  face_embedding Bytes
+  created_at     DateTime @default(now())
+}
+
+model Attendance {
+  attendance_id Int          @id @default(autoincrement())
+  user          User         @relation(fields: [user_id], references: [user_id])
+  user_id       Int
+  session       LabSessions @relation(fields: [session_id], references: [session_id])
+  session_id    Int
+  status        Status
+  timestamp     DateTime     @default(now())
+  photo_capture String?
+}
+
+model QRAttendance {
+  qr_id     Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [user_id])
+  user_id   Int
+  scan_time DateTime @default(now())
+}
+
+model LabSessions {
+  session_id    Int          @id @default(autoincrement())
+  start_time    DateTime
+  end_time      DateTime
+  date          DateTime
+  created_by    User         @relation(fields: [created_by_id], references: [user_id])
+  created_by_id Int
+  Attendance    Attendance[]
+}
+
+model GuestAttendance {
+  guest_id   Int      @id @default(autoincrement())
+  nim        String
+  name       String
+  major      String
+  visit_time DateTime @default(now())
+}
+
+model DutySchedule {
+  duty_id    Int      @id @default(autoincrement())
+  user       User     @relation(fields: [user_id], references: [user_id])
+  user_id    Int
+  day        Day
+  start_time DateTime
+  end_time   DateTime
+}
+
+model Notifications {
+  notification_id Int                @id @default(autoincrement())
+  user            User               @relation(fields: [user_id], references: [user_id])
+  user_id         Int
+  message         String
+  status          NotificationStatus
+  created_at      DateTime           @default(now())
+}
+
+enum Role {
+  mahasiswa
+  dosen
+  asisten_lab
+  admin
+}
+
+enum Status {
+  Hadir
+  Terlambat
+  Absen
+  Piket
+}
+
+enum Day {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+}
+
+enum NotificationStatus {
+  Read
+  Unread
+}
